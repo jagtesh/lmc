@@ -17,34 +17,34 @@ def model_config(model_name, **kwargs):
 
 config_list = [
     model_config("nous-hermes2:10.7b-solar-q5_K_M"),
-    model_config("ollama run phi:2.7b-chat-v2-q5_K_M"),
+    # model_config("ollama run phi:2.7b-chat-v2-q5_K_M"),
 ]
 
 # set a "universal" config for the agents
 agent_config = {
-    "seed": 42,  # change the seed for different trials
+    # "seed": 42,  # change the seed for different trials
     "temperature": 0,
     "config_list": config_list,
-    "request_timeout": 120,
+    # "request_timeout": 120,
 }
 
 # humans
 user_proxy = UserProxyAgent(
-    name="Admin",
+    name="Admin_Amy",
     system_message="A human admin. Interact with the planner to discuss the plan. Plan execution needs to be approved by this admin.",
     code_execution_config=False,
 )
 
 executor = UserProxyAgent(
-    name="Executor",
+    name="Executor_Bob",
     system_message="Executor. Execute the code written by the engineer and report the result.",
     human_input_mode="NEVER",
-    code_execution_config={"last_n_messages": 3, "work_dir": "paper"},
+    code_execution_config={"last_n_messages": 3, "agent-workspace": "paper"},
 )
 
 # agents
 engineer = AssistantAgent(
-    name="Engineer",
+    name="Engineer_Alex",
     llm_config=agent_config,
     system_message="""Engineer. You follow an approved plan. You write python/shell code to solve tasks. Wrap the code in a code block that specifies the script type. The user can't modify your code. So do not suggest incomplete code which requires others to modify. Don't use a code block if it's not intended to be executed by the executor.
 Don't include multiple code blocks in one response. Do not ask others to copy and paste the result. Check the execution result returned by the executor.
@@ -53,13 +53,13 @@ If the result indicates there is an error, fix the error and output the code aga
 )
 
 scientist = AssistantAgent(
-    name="Scientist",
+    name="Scientist_Billy",
     llm_config=agent_config,
     system_message="""Scientist. You follow an approved plan. You are able to categorize papers after seeing their abstracts printed. You don't write code.""",
 )
 
 planner = AssistantAgent(
-    name="Planner",
+    name="Planner_Alice",
     system_message="""Planner. Suggest a plan. Revise the plan based on feedback from admin and critic, until admin approval.
 The plan may involve an engineer who can write code and a scientist who doesn't write code.
 Explain the plan first. Be clear which step is performed by an engineer, and which step is performed by a scientist.
@@ -68,7 +68,7 @@ Explain the plan first. Be clear which step is performed by an engineer, and whi
 )
 
 critic = AssistantAgent(
-    name="Critic",
+    name="Critic_Carl",
     system_message="Critic. Double check plan, claims, code from other agents and provide feedback. Check whether the plan includes adding verifiable info such as source URL.",
     llm_config=agent_config,
 )
@@ -82,9 +82,7 @@ groupchat = GroupChat(
 manager = GroupChatManager(groupchat=groupchat, llm_config=agent_config)
 
 # Start the Chat!
-user_proxy.initiate_chat(
+manager.initiate_chat(
     manager,
-    message="""
-find papers on LLM applications from arxiv in the last week, create a markdown table of different domains. then save it as a markdown file.
-""",
+    message="""Find papers on LLM applications from arxiv in the last week, create a markdown table of different domains. then save it as a markdown file.""",
 )
