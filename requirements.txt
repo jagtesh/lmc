@@ -1,0 +1,2 @@
+lightllm[proxy]
+pyautogen
